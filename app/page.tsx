@@ -1163,6 +1163,16 @@ export default function ShopQuestAR() {
                           )
                         })}
                       </div>
+                      {/* Fake navigation arrow overlay */}
+                      <div className="absolute left-1/2 bottom-24 z-30 flex flex-col items-center pointer-events-none" style={{ transform: 'translateX(-50%)' }}>
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"
+                          className="animate-bounce"
+                          style={{ transform: 'rotate(-30deg)' }} // adjust angle as needed
+                        >
+                          <polygon points="24,4 40,44 24,36 8,44" fill="#3B82F6" stroke="#2563EB" strokeWidth="2" />
+                        </svg>
+                        <span className="text-blue-500 font-bold mt-1 text-xs bg-white/80 rounded-full px-2 py-0.5">Go this way</span>
+                      </div>
                       {/* HUD overlays, controls, etc. */}
                       <div className="absolute top-4 left-0 right-0 flex flex-col items-center gap-4 px-2 z-10">
                         {/* Example HUD: Next item, timer, etc. */}
