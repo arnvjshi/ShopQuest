@@ -1,0 +1,35 @@
+{
+  "name": "ShopQuest AR - Immersive Shopping Experience",
+  "short_name": "ShopQuest AR",
+  "description": "Revolutionary AR shopping experience with gamified rewards",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "theme_color": "#ef4444",
+  "background_color": "#000000",
+  "categories": ["shopping", "games", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "features": ["AR Shopping", "Motion Tracking", "Gamified Rewards", "Real-time Camera", "3D Mapping"],
+  "prefer_related_applications": false
+}
