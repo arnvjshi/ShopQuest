@@ -43,6 +43,7 @@ import { Slider } from "@/components/ui/slider"
 // Change the import to avoid conflict
 import CameraComponent from "@/components/ui/Camera"
 import ARObject from "../components/ar/ARObject"
+import { useRouter } from 'next/navigation';
 
 interface ARObject {
   id: string
@@ -851,14 +852,12 @@ export default function ShopQuestAR() {
     }
   }
 
+  const router = useRouter();
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 flex flex-col items-center justify-center">
       {/* Camera feed with glass effect overlay, only visible in AR tab */}
-      {/*{activeTab === "ar" && (
-        <div className="w-full max-w-2xl aspect-video my-4 rounded-xl overflow-hidden shadow-lg">
-          <CameraComponent />
-        </div>
-      )}*/}
+      {/* Removed invalid commented-out JSX block to fix build error */}
 
       {/* PWA Install Banner */}
       {installPromptRef.current && (
@@ -1079,7 +1078,7 @@ export default function ShopQuestAR() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
           {/* Enhanced Tab Navigation with Glass Effect */}
           <div className="p-4">
-            <TabsList className="grid w-full grid-cols-5 glass-3d border border-white/10 shadow-2xl">
+            <TabsList className="grid w-full grid-cols-5 glass-3d border border-white/10 shadow-2xl min-h-[56px] text-lg">
               <TabsTrigger
                 value="ar"
                 className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400 data-[state=active]:border-red-500/30 transition-all duration-300"
@@ -1114,371 +1113,71 @@ export default function ShopQuestAR() {
           </div>
 
           <div className="px-4 pb-4">
-            <TabsContent value="ar" className="mt-0">
-              {isARFullscreen ? (
-                <div className="fixed inset-0 z-50 flex items-center justify-center w-full max-w-md mx-auto px-4 pb-4">
-                  <Card className="glass-3d border border-white/10 shadow-2xl w-full h-full flex flex-col items-center justify-center relative px-4 pb-4">
-                    {/* Back/Close Button */}
-                    <div className="absolute top-4 left-4 z-10">
-                      <Button
-                        size="icon"
-                        className="w-12 h-12 rounded-full bg-white/20 text-white text-2xl flex items-center justify-center shadow-lg"
-                        onClick={() => setIsARFullscreen(false)}
-                      >
-                        <ArrowLeft className="w-7 h-7" />
-                      </Button>
-                    </div>
-                    {/* Camera & Sensor Error Handling */}
-                    {(!isCameraReady || !sensorsEnabled) && !demoMode ? (
-                      <div className="flex flex-col items-center justify-center w-full h-full gap-4">
-                        {!isCameraReady && (
-                          <div className="text-center">
-                            <CameraComponent className="w-12 h-12 text-red-400 mx-auto mb-2" />
-                            <div className="text-sm text-red-400 mb-2">Camera not ready or permission denied.</div>
-                            <Button onClick={initializeCamera} className="bg-red-500 hover:bg-red-600 w-full max-w-xs mx-auto mb-2">
-                              <CameraComponent className="w-4 h-4 mr-2" />
-                              Enable Camera
-                            </Button>
-                          </div>
-                        )}
-                        {!sensorsEnabled && (
-                          <div className="text-center">
-                            <Smartphone className="w-12 h-12 text-blue-400 mx-auto mb-2" />
-                            <div className="text-sm text-blue-400 mb-2">Motion sensors not enabled.</div>
-                            <Button onClick={requestMotionPermission} className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs mx-auto mb-2">
-                              <Compass className="w-4 h-4 mr-2" />
-                              Enable Motion Sensors
-                            </Button>
-                          </div>
-                        )}
-                        <Button onClick={() => setDemoMode(true)} className="bg-gray-700 hover:bg-gray-800 w-full max-w-xs mx-auto">
-                          <Zap className="w-4 h-4 mr-2" />
-                          {/* No demo mode text */}
-                          Try AR
-                        </Button>
-                      </div>
-                    ) : (
-                      // Normal AR or Demo Mode
-                      <div className="relative w-full h-full flex-1 flex flex-col items-center justify-center">
-                        {/* Camera feed always visible in background */}
-                        <video
-                          ref={videoRef}
-                          className="w-full h-full object-cover rounded-xl absolute inset-0 z-0"
-                          autoPlay
-                          playsInline
-                          muted
-                          style={{ transform: "scaleX(-1)" }}
-                        />
-                        {/* AR objects (real or demo) */}
-                        {(demoMode
-                          ? [1,2,3].map((n) => ({
-                              id: `demo-${n}`,
-                              type: n === 1 ? 'item' : n === 2 ? 'creature' : 'deal',
-                              data: {
-                                ...(n === 1 && { item: 'Demo Milk', price: 3.99, discount: 20 }),
-                                ...(n === 2 && { emoji: '🦄', name: 'Demo Creature', power: 999 }),
-                                ...(n === 3 && { name: 'Demo Deal', discount: 50, category: 'Demo' }),
-                              },
-                              x: 100 + n * 80,
-                              y: 200 + n * 60,
-                              scale: 1.2,
-                              rotation: 0,
-                            }) )
-                          : arObjects.filter(obj => obj.type === 'item' || obj.type === 'creature' || obj.type === 'deal')
-                        ).map((obj) => (
-                          <ARObject
-                            key={obj.id}
-                            type={obj.type as 'item' | 'creature' | 'deal'}
-                            data={obj.data}
-                            style={{
-                              left: `${Math.max(0, Math.min(100, (obj.x / 500) * 100))}%`,
-                              top: `${Math.max(0, Math.min(100, (obj.y / 700) * 100))}%`,
-                              position: "absolute",
-                              transform: `translate(-50%, -50%) scale(${obj.scale}) rotateZ(${obj.rotation}deg)`
-                            }}
-                            onCatch={() => {
-                              if (demoMode) return;
-                              if (obj.type === "item") handleItemFound(obj.data.id)
-                              if (obj.type === "creature") handleCreatureCaught(obj.data.id)
-                            }}
-                          />
-                        ))}
-                        {/* HUD and controls remain the same */}
-                        <div className="absolute top-4 left-0 right-0 flex flex-col items-center gap-4 px-2 z-10">
-                          <div className="flex flex-row justify-center items-center w-full max-w-xs mx-auto gap-2">
-                            <div className="glass-3d rounded-xl p-2 flex-1 text-center shadow-lg">
-                              <div className="text-xs text-gray-400">Next Item</div>
-                              <div className="font-bold text-white text-sm">{nextItem?.item || "-"}</div>
-                              <div className="text-xs text-green-400 flex items-center gap-1 justify-center">{nextItem?.distance} ft away</div>
-                            </div>
-                            <div className="glass-3d rounded-xl p-2 flex-1 text-center shadow-lg">
-                              <div className="text-xs text-gray-400">Quest Timer</div>
-                              <div className="font-bold text-orange-400 text-sm">{activeQuests.find((q) => q.active)?.timeLeft || "0:00"}</div>
-                            </div>
-                            <Button
-                              size="icon"
-                              className="w-12 h-12 rounded-full glass-3d border border-white/20 hover:bg-white/10 flex items-center justify-center"
-                              onClick={calibrateAR}
-                              disabled={isCalibrating}
-                            >
-                              <RotateCcw className={`w-6 h-6 ${isCalibrating ? "animate-spin" : ""}`} />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-4 px-2 z-10">
-                          <div className="flex flex-row justify-center items-center w-full max-w-xs mx-auto gap-2">
-                            <Button
-                              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg shadow-green-500/25 border border-green-400/30 glass-3d transition-all duration-300 hover:scale-105 flex-1 min-w-[44px] min-h-[44px]"
-                              onClick={handleScan}
-                              disabled={isScanning || !nextItem || !isARActive || !isCameraReady}
-                            >
-                              {isScanning ? (
-                                <div className="flex items-center gap-2">
-                                  <Scan className="w-4 h-4 animate-spin" />
-                                  Scanning...
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <Scan className="w-4 h-4" />
-                                  Scan Item
-                                </div>
-                              )}
-                            </Button>
-                            <div className="text-center glass-3d rounded-xl p-3 border border-white/20 shadow-lg flex-1 min-w-[44px] min-h-[44px]">
-                              <div className="text-xs text-gray-400">Progress</div>
-                              <div className="text-2xl font-bold text-white">
-                                {foundItems}/{totalItems}
-                              </div>
-                              <div className="w-16 h-1 bg-white/20 rounded-full mt-1 mx-auto">
-                                <div
-                                  className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500"
-                                  style={{ width: `${completionPercentage}%` }}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </Card>
+            <TabsContent value="ar" className="flex flex-col items-center justify-center w-full">
+              <div className="w-full h-[80vh] flex items-center justify-center relative">
+                {/* Tab switcher bar at the top */}
+                <div className="absolute top-4 left-4 right-20 z-30 flex justify-center">
+                  <TabsList className="grid grid-cols-5 glass-3d border border-white/10 shadow-2xl min-h-[44px] text-base w-full max-w-xs">
+                    <TabsTrigger value="ar" className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400">AR</TabsTrigger>
+                    <TabsTrigger value="list" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">List</TabsTrigger>
+                    <TabsTrigger value="map" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">Map</TabsTrigger>
+                    <TabsTrigger value="creatures" className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400">Creatures</TabsTrigger>
+                    <TabsTrigger value="profile" className="data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400">Profile</TabsTrigger>
+                  </TabsList>
                 </div>
-              ) : (
-                <Card className="glass-3d border border-white/10 shadow-2xl min-h-[500px] relative overflow-hidden">
-                  {/* Sensor Permission Overlay */}
-                  {!sensorsEnabled && motionPermission === "prompt" && (
-                    <div className="absolute inset-0 glass-3d z-50 flex items-center justify-center">
-                      <div className="text-center p-6">
-                        <Smartphone className="w-16 h-16 text-blue-400 mx-auto mb-4 animate-pulse" />
-                        <div className="text-lg font-bold text-white mb-2">Enable Motion Sensors</div>
-                        <div className="text-sm text-gray-400 mb-4">
-                          Allow motion and orientation access for immersive AR experience
-                        </div>
-                        <Button onClick={requestMotionPermission} className="bg-blue-500 hover:bg-blue-600">
-                          <Compass className="w-4 h-4 mr-2" />
-                          Enable Sensors
-                        </Button>
+                {/* Back button at top right */}
+                <button
+                  className="absolute top-4 right-4 z-30 bg-white/80 hover:bg-white text-gray-900 rounded-full p-2 shadow-lg flex items-center justify-center"
+                  onClick={() => setActiveTab ? setActiveTab('list') : router.back()}
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="w-6 h-6" />
+                </button>
+                <CameraComponent
+                  className="w-full h-full"
+                  overlayContent={
+                    <>
+                      {/* AR objects */}
+                      <div className="absolute inset-0 pointer-events-none">
+                        {arObjects.filter(obj => obj.type === 'item' || obj.type === 'creature' || obj.type === 'deal').map(obj => {
+                          const pos = calculate3DPosition(obj)
+                          return (
+                            <ARObject
+                              key={obj.id}
+                              type={obj.type as 'item' | 'creature' | 'deal'}
+                              data={obj.data}
+                              style={{
+                                left: `${Math.max(0, Math.min(100, (pos.x / 500) * 100))}%`,
+                                top: `${Math.max(0, Math.min(100, (pos.y / 700) * 100))}%`,
+                                position: "absolute",
+                                transform: `translate(-50%, -50%) scale(${pos.scale}) rotateZ(${obj.rotation}deg)`,
+                                opacity: pos.opacity,
+                                zIndex: Math.floor(100 - obj.z),
+                                filter: pos.blur > 0 ? `blur(${pos.blur}px)` : "none",
+                              }}
+                              onCatch={() => {
+                                if (obj.type === "item") handleItemFound(obj.data.id)
+                                if (obj.type === "creature") handleCreatureCaught(obj.data.id)
+                              }}
+                            />
+                          )
+                        })}
                       </div>
-                    </div>
-                  )}
-
-                  {/* Camera Feed */}
-                  <div className="absolute inset-0">
-                    {isARActive && isCameraReady && !cameraError ? (
-                      <>
-                        <video
-                          ref={videoRef}
-                          className="w-full h-full object-cover"
-                          autoPlay
-                          playsInline
-                          muted
-                          style={{ transform: "scaleX(-1)" }}
-                        />
-                        {/* Glass overlay for UI integration */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/20 pointer-events-none"></div>
-                      </>
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
-                        {cameraError ? (
-                          <div className="text-center p-4 glass-3d rounded-xl">
-                            <CameraComponent className="w-12 h-12 text-red-400 mx-auto mb-2" />
-                            <div className="text-sm text-red-400 mb-4 max-w-xs">{cameraError}</div>
-                            <Button onClick={initializeCamera} className="bg-red-500 hover:bg-red-600">
-                              <CameraComponent className="w-4 h-4 mr-2" />
-                              Retry Camera
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="text-center p-4 glass-3d rounded-xl">
-                            <CameraComponent className="w-12 h-12 text-blue-400 mx-auto mb-2 animate-pulse" />
-                            <div className="text-sm text-gray-400 mb-2">
-                              {isARActive ? "Loading camera..." : "Initializing AR..."}
-                            </div>
-                            <div className="w-32 h-1 bg-white/20 rounded-full mx-auto">
-                              <div
-                                className="h-full bg-blue-500 rounded-full animate-pulse"
-                                style={{ width: "60%" }}
-                              ></div>
-                            </div>
-                          </div>
-                        )}
+                      {/* HUD overlays, controls, etc. */}
+                      <div className="absolute top-4 left-0 right-0 flex flex-col items-center gap-4 px-2 z-10">
+                        {/* Example HUD: Next item, timer, etc. */}
+                        {/* ...insert your HUD overlays here... */}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Enhanced AR Grid Overlay */}
-                  {isARActive && isCameraReady && (
-                    <div className="absolute inset-0 opacity-10 pointer-events-none">
-                      <div className="grid grid-cols-8 grid-rows-12 h-full w-full">
-                        {Array.from({ length: 96 }).map((_, i) => (
-                          <div key={i} className="border border-blue-500/30 ar-grid"></div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Stabilized 3D AR Objects */}
-                  <div ref={arContainerRef} className="absolute inset-0 pointer-events-none">
-                    {arObjects.filter(obj => obj.type === 'item' || obj.type === 'creature' || obj.type === 'deal').map((obj) => {
-                      const pos = calculate3DPosition(obj)
-                      return (
-                        <div
-                          key={obj.id}
-                          className="absolute pointer-events-auto cursor-pointer transition-all duration-100 ar-object"
-                          style={{
-                            left: `${Math.max(0, Math.min(100, (pos.x / 500) * 100))}%`,
-                            top: `${Math.max(0, Math.min(100, (pos.y / 700) * 100))}%`,
-                            transform: `translate(-50%, -50%) scale(${pos.scale}) rotateZ(${obj.rotation}deg) perspective(1000px) rotateX(${deviceMotion.orientation.beta * 0.2}deg) rotateY(${deviceMotion.orientation.gamma * 0.2}deg)`,
-                            opacity: pos.opacity,
-                            zIndex: Math.floor(100 - obj.z),
-                            filter: pos.blur > 0 ? `blur(${pos.blur}px)` : "none",
-                          }}
-                          onClick={() => {
-                            if (obj.type === "item") {
-                              handleItemFound(obj.data.id)
-                            } else if (obj.type === "creature") {
-                              handleCreatureCaught(obj.data.id)
-                            }
-                          }}
-                        >
-                          {obj.type === "item" && (
-                            <div className="relative">
-                              <div className="glass-3d text-white px-3 py-2 rounded-full text-xs font-bold shadow-lg border border-green-400/30 animate-pulse">
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  {obj.data.item}
-                                  {obj.data.discount && (
-                                    <Badge className="bg-red-500/80 text-white text-xs ml-1">
-                                      -{obj.data.discount}%
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="text-xs text-green-300 mt-1">${obj.data.price}</div>
-                              </div>
-                              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-2xl animate-bounce">
-                                ↓
-                              </div>
-                            </div>
-                          )}
-
-                          {obj.type === "creature" && (
-                            <div className="relative">
-                              <div className="glass-3d text-black p-3 rounded-full shadow-lg border border-yellow-400/50 hover:scale-110 transition-transform duration-200 animate-bounce">
-                                <div className="text-2xl">{obj.data.emoji}</div>
-                              </div>
-                              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs text-center glass-3d rounded-full px-2 py-1 border border-white/20 whitespace-nowrap">
-                                <div className="text-white font-bold">{obj.data.name}</div>
-                                <div className="text-yellow-400 text-xs">⚡ {obj.data.power}</div>
-                              </div>
-                            </div>
-                          )}
-
-                          {obj.type === "deal" && (
-                            <div className="relative">
-                              <div className="glass-3d bg-gradient-to-r from-red-500/80 to-orange-500/80 text-white p-3 rounded-xl shadow-lg border border-red-400/50 animate-pulse">
-                                <div className="text-xs font-bold">{obj.data.name}</div>
-                                <div className="text-lg font-bold">-{obj.data.discount}%</div>
-                                <div className="text-xs">{obj.data.category}</div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {/* Enhanced Scanning Effect */}
-                  {isScanning && (
-                    <div className="absolute inset-0 bg-red-500/10 glass-3d pointer-events-none">
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-32 h-32 border-4 border-red-500 rounded-full animate-ping"></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Scan className="w-8 h-8 text-red-500 animate-spin" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Enhanced Calibration Effect */}
-                  {isCalibrating && (
-                    <div className="absolute inset-0 glass-3d pointer-events-none">
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                        <div className="w-24 h-24 border-4 border-blue-500 rounded-full animate-spin mb-4 calibrate-animation"></div>
-                        <div className="text-blue-400 font-bold">Calibrating AR...</div>
-                        <div className="text-xs text-gray-400 mt-1">Stabilizing sensors...</div>
-                      </div>
-                    </div>
-                  )}
-                </Card>
-              )}
-
-              {/* Add a button to enter fullscreen */}
-              <div className="absolute bottom-4 right-4 z-20">
-                <Button
-                  size="icon"
-                  className="w-14 h-14 rounded-full bg-white/20 text-white text-2xl flex items-center justify-center"
+                    </>
+                  }
+                />
+                {/* Button to enter fullscreen mode */}
+                <button
+                  className="absolute bottom-4 right-4 z-20 bg-white/20 rounded-full p-3 shadow-lg"
                   onClick={() => setIsARFullscreen(true)}
                 >
-                  <Camera className="w-8 h-8" />
-                </Button>
-              </div>
-
-              {/* Enhanced AR Controls with Glass Effect */}
-              <div className="absolute top-4 right-4 flex flex-col gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="glass-3d border border-white/20 hover:bg-white/10 w-10 h-10 p-0"
-                  onClick={calibrateAR}
-                  disabled={isCalibrating}
-                >
-                  <RotateCcw className={`w-4 h-4 ${isCalibrating ? "animate-spin" : ""}`} />
-                </Button>
-
-                {/* Enhanced Motion Status Indicator */}
-                <div
-                  className={`w-10 h-10 rounded-full border-2 flex items-center justify-center glass-3d ${
-                    sensorsEnabled
-                      ? isMoving
-                        ? "border-green-500 bg-green-500/20"
-                        : "border-blue-500 bg-blue-500/20"
-                      : "border-gray-500 bg-gray-500/20"
-                  }`}
-                >
-                  <Smartphone
-                    className={`w-4 h-4 ${
-                      sensorsEnabled ? (isMoving ? "text-green-400 animate-pulse" : "text-blue-400") : "text-gray-400"
-                    }`}
-                  />
-                </div>
-
-                {/* Stability Indicator */}
-                <div className="glass-3d rounded-full p-2 border border-white/20">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      Date.now() - lastSignificantMotion > STABILITY_TIME ? "bg-green-400" : "bg-orange-400"
-                    }`}
-                  ></div>
-                </div>
+                  Fullscreen
+                </button>
               </div>
             </TabsContent>
 
