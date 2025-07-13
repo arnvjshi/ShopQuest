@@ -44,6 +44,7 @@ import { Slider } from "@/components/ui/slider"
 import CameraComponent from "@/components/ui/Camera"
 import ARObject from "../components/ar/ARObject"
 import { useRouter } from 'next/navigation';
+import BottomTabBar from "@/components/ui/BottomTabBar";
 
 interface ARObject {
   id: string
@@ -135,7 +136,8 @@ export default function ShopQuestAR() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const arContainerRef = useRef<HTMLDivElement>(null)
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+  // Fix: type for cardRefs
+  const cardRefs = useRef<Array<HTMLDivElement | null>>([])
   const lastMotionRef = useRef<DeviceMotionData | null>(null)
   const installPromptRef = useRef<any>(null)
 
@@ -854,267 +856,36 @@ export default function ShopQuestAR() {
 
   const router = useRouter();
 
+  // Fix: type for tabMap and tab keys
+  const tabMap: Record<string, string> = {
+    list: "list",
+    quests: "quests",
+    collect: "ar",
+    rewards: "profile",
+    leaders: "profile",
+  };
+  const tabKeys = Object.keys(tabMap);
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 flex flex-col items-center justify-center">
-      {/* Camera feed with glass effect overlay, only visible in AR tab */}
-      {/* Removed invalid commented-out JSX block to fix build error */}
-
-      {/* PWA Install Banner */}
-      {installPromptRef.current && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-500 to-red-600 p-3 text-center">
-          <div className="flex items-center justify-between max-w-md mx-auto">
-            <span className="text-sm font-medium">Install ShopQuest AR for the best experience!</span>
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={installPWA} className="text-white hover:bg-white/20">
-                <Download className="w-4 h-4 mr-1" />
-                Install
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => (installPromptRef.current = null)}
-                className="text-white hover:bg-white/20"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+    <main className="min-h-screen bg-white flex flex-col items-stretch justify-start font-sans">
+      {/* Modern Minimalist Header */}
+      <header className="sticky top-0 z-20 w-full bg-white border-b border-gray-200 shadow-sm flex items-center px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl font-bold text-game-blue font-sans">ShopQuest</span>
         </div>
-      )}
-
-      {/* Animated Background */}
-      <div className="fixed inset-0 opacity-10">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-red-500 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-blue-500 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-green-500 rounded-full blur-2xl animate-pulse delay-500"></div>
-      </div>
-
-      {/* Enhanced Header with Glass Effect */}
-      <div className="relative z-10 glass-3d border-b border-white/10 shadow-2xl">
-        <div className="flex items-center justify-between p-4 max-w-md mx-auto">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-sm font-bold flex items-center gap-1">
-                Level {level}
-                <Crown className="w-3 h-3 text-yellow-400" />
-              </div>
-              <div className="text-xs text-gray-300 flex items-center gap-2">
-                <span>{xp.toLocaleString()} XP</span>
-                <span className="text-yellow-400">💰 {coins}</span>
-                <span className="text-orange-400 flex items-center gap-1">
-                  <Flame className="w-3 h-3" />
-                  {streak}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-lg font-bold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
-              ShopQuest AR
-            </div>
-            <div className="text-xs text-gray-400">Walmart Supercenter</div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" className="w-8 h-8 p-0 glass-3d" onClick={() => setShowCart(true)}>
-              <div className="relative">
-                <ShoppingCart className="w-4 h-4 text-blue-400" />
-                {cart.length > 0 && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
-                    {cart.length}
-                  </div>
-                )}
-              </div>
-            </Button>
-            <Button size="sm" variant="ghost" className="w-8 h-8 p-0 glass-3d" onClick={toggleFullscreen}>
-              {isFullscreen ? (
-                <Minus className="w-4 h-4 text-green-400" />
-              ) : (
-                <Plus className="w-4 h-4 text-green-400" />
-              )}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="w-8 h-8 p-0 glass-3d"
-              onClick={() => setSoundEnabled(!soundEnabled)}
-            >
-              {soundEnabled ? (
-                <Volume2 className="w-4 h-4 text-blue-400" />
-              ) : (
-                <VolumeX className="w-4 h-4 text-gray-400" />
-              )}
-            </Button>
-          </div>
+        <div className="ml-auto flex items-center gap-2">
+          <button className="w-9 h-9 flex items-center justify-center rounded-full bg-game-yellow text-game-blue font-bold shadow border border-game-blue">N</button>
         </div>
-
-        {/* Enhanced XP Progress with Gamification */}
-        <div className="px-4 pb-3 max-w-md mx-auto">
-          <div className="relative">
-            <Progress value={65} className="h-3 bg-white/10 border border-white/20" />
-            <div
-              className="absolute inset-0 bg-gradient-to-r from-red-500/50 to-red-600/50 rounded-full"
-              style={{ width: "65%" }}
-            ></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-xs font-bold text-white drop-shadow-lg">350 XP to Level 9</div>
-            </div>
-          </div>
-          <div className="flex justify-between items-center mt-2">
-            <div className="text-xs text-gray-400">Daily Streak: {streak} days</div>
-            <div className="text-xs text-yellow-400 flex items-center gap-1">
-              <Gem className="w-3 h-3" />
-              Premium Member
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Shopping Cart Modal */}
-      {showCart && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end">
-          <div className="w-full max-w-md mx-auto bg-gradient-to-br from-gray-900 to-black rounded-t-3xl p-6 glass-3d border-t border-white/20 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Shopping Cart</h2>
-              <Button size="sm" variant="ghost" onClick={() => setShowCart(false)}>
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            {cart.length === 0 ? (
-              <div className="text-center py-8">
-                <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-400">Your cart is empty</p>
-                <p className="text-sm text-gray-500">Start scanning items to add them!</p>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-3 mb-6">
-                  {cart.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 glass-3d rounded-xl">
-                      <div className="text-2xl">{item.image}</div>
-                      <div className="flex-1">
-                        <div className="font-medium text-white">{item.name}</div>
-                        <div className="text-sm text-gray-400 flex items-center gap-2">
-                          <span className="flex items-center gap-1">
-                            <Star className="w-3 h-3 text-yellow-400" />
-                            {item.rating}
-                          </span>
-                          {item.discount && (
-                            <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
-                              -{item.discount}%
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          {item.discount ? (
-                            <>
-                              <span className="text-lg font-bold text-green-400">
-                                ${(item.price * (1 - item.discount / 100)).toFixed(2)}
-                              </span>
-                              <span className="text-sm text-gray-400 line-through">${item.price.toFixed(2)}</span>
-                            </>
-                          ) : (
-                            <span className="text-lg font-bold text-white">${item.price.toFixed(2)}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="w-8 h-8 p-0 glass-3d"
-                          onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
-                        >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                        <span className="w-8 text-center font-bold">{item.quantity}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="w-8 h-8 p-0 glass-3d"
-                          onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="glass-3d rounded-xl p-4 mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-400">Subtotal:</span>
-                    <span className="text-white">${(getCartTotal() + getCartSavings()).toFixed(2)}</span>
-                  </div>
-                  {getCartSavings() > 0 && (
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-green-400">You Save:</span>
-                      <span className="text-green-400">-${getCartSavings().toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center text-lg font-bold border-t border-white/20 pt-2">
-                    <span className="text-white">Total:</span>
-                    <span className="text-green-400">${getCartTotal().toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg shadow-green-500/25">
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Checkout (${getCartTotal().toFixed(2)})
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="relative z-10 max-w-md mx-auto">
+      </header>
+      {/* Main Content with extra bottom padding for tab bar */}
+      <div className="flex-1 w-full max-w-md mx-auto pb-24 px-2">
+        {/* Render content based on activeTab */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          {/* Enhanced Tab Navigation with Glass Effect */}
-          <div className="p-4">
-            <TabsList className="grid w-full grid-cols-5 glass-3d border border-white/10 shadow-2xl min-h-[56px] text-lg">
-              <TabsTrigger
-                value="ar"
-                className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400 data-[state=active]:border-red-500/30 transition-all duration-300"
-              >
-                <Camera className="w-4 h-4" />
-              </TabsTrigger>
-              <TabsTrigger
-                value="list"
-                className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 data-[state=active]:border-blue-500/30 transition-all duration-300"
-              >
-                <ShoppingCart className="w-4 h-4" />
-              </TabsTrigger>
-              <TabsTrigger
-                value="map"
-                className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 data-[state=active]:border-green-500/30 transition-all duration-300"
-              >
-                <Map className="w-4 h-4" />
-              </TabsTrigger>
-              <TabsTrigger
-                value="creatures"
-                className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400 data-[state=active]:border-purple-500/30 transition-all duration-300"
-              >
-                <Gift className="w-4 h-4" />
-              </TabsTrigger>
-              <TabsTrigger
-                value="profile"
-                className="data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400 data-[state=active]:border-yellow-500/30 transition-all duration-300"
-              >
-                <User className="w-4 h-4" />
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <div className="px-4 pb-4">
+          {/* Remove old top tab bar */}
+          <div className="hidden" />
+          <div className="px-0 pb-0">
             <TabsContent value="ar" className="flex flex-col items-center justify-center w-full">
-              <div className="w-full h-[80vh] flex items-center justify-center relative">
+              <div className="w-full h-[80vh] flex items-center justify-center relative pb-24"> {/* Add pb-24 for tab bar */}
                 {/* Tab switcher bar at the top */}
                 <div className="absolute top-4 left-4 right-20 z-30 flex justify-center">
                   <TabsList className="grid grid-cols-5 glass-3d border border-white/10 shadow-2xl min-h-[44px] text-base w-full max-w-xs">
@@ -1679,6 +1450,12 @@ export default function ShopQuestAR() {
           </div>
         </div>
       )}
+
+      {/* Bottom Tab Bar always visible, even in fullscreen AR */}
+      <BottomTabBar
+        active={tabKeys.find(key => tabMap[key] === activeTab) || "list"}
+        onTabChange={tab => setActiveTab(tabMap[tab] || "list")}
+      />
     </main>
   )
 }

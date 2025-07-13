@@ -12,6 +12,10 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ["Montserrat", "Arial", "sans-serif"],
+  			gamey: ["'Press Start 2P'", "cursive"],
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -62,12 +66,22 @@ const config: Config = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
+  			},
+  			game: {
+  				blue: '#4f46e5',
+  				red: '#ef4444',
+  				yellow: '#fbbf24',
+  				green: '#22c55e',
+  				purple: '#a21caf',
+  				white: '#fff',
+  				black: '#222',
   			}
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			gamey: '1.5em',
   		},
   		keyframes: {
   			'accordion-down': {
@@ -90,9 +104,27 @@ const config: Config = {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
+  		},
+  		boxShadow: {
+  			neon: '0 0 8px #38bdf8, 0 0 16px #f472b6',
+  			neon2: '0 2px 16px 0 #38bdf8, 0 0 8px 2px #f472b6',
+  			gamey: '0 2px 8px 0 #4f46e5',
+  		},
+  		textShadow: {
+  			neon: '0 0 8px #38bdf8, 0 0 16px #f472b6',
+  		},
+  		borderWidth: {
+  			3: '3px',
+  			6: '6px',
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), function({ addUtilities }) {
+    addUtilities({
+      '.text-shadow-neon': {
+        textShadow: '0 0 8px #38bdf8, 0 0 16px #f472b6',
+      },
+    })
+  }],
 };
 export default config;
